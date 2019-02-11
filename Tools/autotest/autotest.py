@@ -306,6 +306,7 @@ def run_specific_test(step, *args, **kwargs):
         "drive.APMrover2": apmrover2.AutoTestRover,
         "drive.BalanceBot": balancebot.AutoTestBalanceBot,
         "fly.CopterAVC": arducopter.AutoTestHeli,
+        "dive.ArduSub": ardusub.AutoTestSub,
     }
     tester_class = tester_class_map[testname]
     tester = tester_class(*args, **kwargs)
@@ -370,14 +371,13 @@ def run_step(step):
         "gdb": opts.gdb,
         "gdbserver": opts.gdbserver,
         "breakpoints": opts.breakpoint,
+        "frame": opts.frame,
     }
     if opts.speedup is not None:
         fly_opts["speedup"] = opts.speedup
 
     if step == 'fly.ArduCopter':
-        tester = arducopter.AutoTestCopter(binary,
-                                           frame=opts.frame,
-                                           **fly_opts)
+        tester = arducopter.AutoTestCopter(binary, **fly_opts)
         return tester.autotest()
 
     if step == 'fly.CopterAVC':
@@ -393,15 +393,11 @@ def run_step(step):
         return tester.autotest()
 
     if step == 'drive.APMrover2':
-        tester = apmrover2.AutoTestRover(binary,
-                                         frame=opts.frame,
-                                         **fly_opts)
+        tester = apmrover2.AutoTestRover(binary, **fly_opts)
         return tester.autotest()
 
     if step == 'drive.balancebot':
-        tester = balancebot.AutoTestBalanceBot(binary,
-                                               frame=opts.frame,
-                                               **fly_opts)
+        tester = balancebot.AutoTestBalanceBot(binary, **fly_opts)
         return tester.autotest()
 
     if step == 'dive.ArduSub':
@@ -410,10 +406,7 @@ def run_step(step):
 
     specific_test_to_run = find_specific_test_to_run(step)
     if specific_test_to_run is not None:
-        return run_specific_test(specific_test_to_run,
-                                 binary,
-                                 frame=opts.frame,
-                                 **fly_opts)
+        return run_specific_test(specific_test_to_run, binary, **fly_opts)
 
     if step == 'build.All':
         return build_all()

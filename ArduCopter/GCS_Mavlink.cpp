@@ -780,20 +780,6 @@ MAV_RESULT GCS_MAVLINK_Copter::handle_command_long_packet(const mavlink_command_
         }
         return MAV_RESULT_FAILED;
 
-#if AC_FENCE == ENABLED
-    case MAV_CMD_DO_FENCE_ENABLE:
-        switch ((uint16_t)packet.param1) {
-        case 0:
-            copter.fence.enable(false);
-            return MAV_RESULT_ACCEPTED;
-        case 1:
-            copter.fence.enable(true);
-            return MAV_RESULT_ACCEPTED;
-        default:
-            return MAV_RESULT_FAILED;
-        }
-#endif
-
 #if PARACHUTE == ENABLED
     case MAV_CMD_DO_PARACHUTE:
         // configure or release parachute
@@ -1304,14 +1290,6 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
         copter.precland.handle_msg(msg);
         break;
 #endif
-
-#if AC_FENCE == ENABLED
-    // send or receive fence points with GCS
-    case MAVLINK_MSG_ID_FENCE_POINT:            // MAV ID: 160
-    case MAVLINK_MSG_ID_FENCE_FETCH_POINT:
-        copter.fence.handle_msg(*this, msg);
-        break;
-#endif // AC_FENCE == ENABLED
 
     case MAVLINK_MSG_ID_TERRAIN_DATA:
     case MAVLINK_MSG_ID_TERRAIN_CHECK:

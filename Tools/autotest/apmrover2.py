@@ -56,7 +56,6 @@ class AutoTestRover(AutoTest):
         self.speedup = speedup
 
         self.sitl = None
-        self.hasInit = False
 
         self.log_name = "APMrover2"
 
@@ -96,46 +95,15 @@ class AutoTestRover(AutoTest):
 
         self.get_mavlink_connection_going()
 
-        self.hasInit = True
-
         self.apply_defaultfile_parameters()
 
         self.progress("Ready to start testing!")
 
-    # def reset_and_arm(self):
-    #     """Reset RC, set to MANUAL and arm."""
-    #     self.wait_heartbeat()
-    #     # ensure all sticks in the middle
-    #     self.set_rc_default()
-    #     self.mavproxy.send('switch 1\n')
-    #     self.wait_heartbeat()
-    #     self.disarm_vehicle()
-    #     self.wait_heartbeat()
-    #     self.arm_vehicle()
-    #
+    def is_rover(self):
+        return True
 
-    # # TEST RC OVERRIDE
-    # # TEST RC OVERRIDE TIMEOUT
-    # def test_rtl(self, home, distance_min=5, timeout=250):
-    #     """Return, land."""
-    #     super(AutoTestRover, self).test_rtl(home, distance_min, timeout)
-    #
-    # def test_mission(self, filename):
-    #     """Test a mission from a file."""
-    #     self.progress("Test mission %s" % filename)
-    #     num_wp = self.load_mission(filename)
-    #     self.mavproxy.send('wp set 1\n')
-    #     self.wait_heartbeat()
-    #     self.mavproxy.send('switch 4\n')  # auto mode
-    #     self.wait_mode('AUTO')
-    #     ret = self.wait_waypoint(0, num_wp-1, max_dist=5, timeout=500)
-    #
-    #     if ret:
-    #         self.mavproxy.expect("Mission Complete")
-    #     self.wait_heartbeat()
-    #     self.wait_mode('HOLD')
-    #     self.progress("test: MISSION COMPLETE: passed=%s" % ret)
-    #     return ret
+    def get_rudder_channel(self):
+        return int(self.get_parameter("RCMAP_ROLL"))
 
     ##########################################################
     #   TESTS DRIVE
@@ -379,6 +347,16 @@ class AutoTestRover(AutoTest):
         self.wait_mode('HOLD', timeout=300)
         self.disarm_vehicle()
         self.progress("Mission OK")
+
+    def test_gripper_mission(self):
+        self.load_mission("rover-gripper-mission.txt")
+        self.change_mode('AUTO')
+        self.wait_ready_to_arm()
+        self.arm_vehicle()
+        self.mavproxy.expect("Gripper Grabbed")
+        self.mavproxy.expect("Gripper Released")
+        self.wait_mode("HOLD")
+        self.disarm_vehicle()
 
     def do_get_banner(self):
         self.mavproxy.send("long DO_SEND_BANNER 1\n")
@@ -665,7 +643,7 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
     def test_rc_override_cancel(self):
         self.change_mode('MANUAL')
         self.wait_ready_to_arm()
-        self.set_throttle_zero()
+        self.zero_throttle()
         self.arm_vehicle()
         # start moving forward a little:
         normal_rc_throttle = 1700
@@ -1000,6 +978,15 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
             ("CameraMission",
              "Test Camera Mission Items",
              self.test_camera_mission_items),
+
+            # Gripper test
+            ("Gripper",
+             "Test gripper",
+             self.test_gripper),
+
+            ("GripperMission",
+             "Test Gripper Mission Items",
+             self.test_gripper_mission),
 
             ("SET_MESSAGE_INTERVAL",
              "Test MAV_CMD_SET_MESSAGE_INTERVAL",

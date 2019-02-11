@@ -50,7 +50,6 @@ class AutoTestPlane(AutoTest):
         self.speedup = speedup
 
         self.sitl = None
-        self.hasInit = False
 
         self.log_name = "ArduPlane"
 
@@ -90,8 +89,19 @@ class AutoTestPlane(AutoTest):
 
         self.get_mavlink_connection_going()
 
-        self.hasInit = True
         self.progress("Ready to start testing!")
+
+    def is_plane(self):
+        return True
+
+    def get_rudder_channel(self):
+        return int(self.get_parameter("RCMAP_YAW"))
+
+    def get_disarm_delay(self):
+        return int(self.get_parameter("LAND_DISARMDELAY"))
+
+    def set_autodisarm_delay(self, delay):
+        self.set_parameter("LAND_DISARMDELAY", delay)
 
     def takeoff(self):
         """Takeoff get to 30m altitude."""
@@ -751,6 +761,8 @@ class AutoTestPlane(AutoTest):
             ("TestRCRelay", "Test Relay RC Channel Option", self.test_rc_relay),
 
             ("TestFlaps", "Flaps", self.fly_flaps),
+
+            ("ArmFeatures", "Arm features", self.test_arm_feature),
 
             ("MainFlight",
              "Lots of things in one flight",

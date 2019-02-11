@@ -666,19 +666,6 @@ MAV_RESULT GCS_MAVLINK_Rover::handle_command_long_packet(const mavlink_command_l
         }
         return MAV_RESULT_UNSUPPORTED;
 
-    case MAV_CMD_DO_FENCE_ENABLE:
-        switch ((uint16_t)packet.param1) {
-        case 0:
-            rover.g2.fence.enable(false);
-            return MAV_RESULT_ACCEPTED;
-        case 1:
-            rover.g2.fence.enable(true);
-            return MAV_RESULT_ACCEPTED;
-        default:
-            break;
-        }
-        return MAV_RESULT_FAILED;
-
     case MAV_CMD_DO_CHANGE_SPEED:
         // param1 : unused
         // param2 : new speed in m/s
@@ -938,13 +925,13 @@ void GCS_MAVLINK_Rover::handleMessage(mavlink_message_t* msg)
                 // consume velocity and turn rate
                 rover.mode_guided.set_desired_turn_rate_and_speed(target_turn_rate_cds, speed_dir * target_speed);
             } else if (pos_ignore && !vel_ignore && acc_ignore && !yaw_ignore && yaw_rate_ignore) {
-                // consume velocity
+                // consume velocity and heading
                 rover.mode_guided.set_desired_heading_and_speed(target_yaw_cd, speed_dir * target_speed);
             } else if (pos_ignore && vel_ignore && acc_ignore && !yaw_ignore && yaw_rate_ignore) {
                 // consume just target heading (probably only skid steering vehicles can do this)
                 rover.mode_guided.set_desired_heading_and_speed(target_yaw_cd, 0.0f);
             } else if (pos_ignore && vel_ignore && acc_ignore && yaw_ignore && !yaw_rate_ignore) {
-                // consume just turn rate(probably only skid steering vehicles can do this)
+                // consume just turn rate (probably only skid steering vehicles can do this)
                 rover.mode_guided.set_desired_turn_rate_and_speed(target_turn_rate_cds, 0.0f);
             }
             break;
@@ -1102,12 +1089,6 @@ void GCS_MAVLINK_Rover::handleMessage(mavlink_message_t* msg)
             handle_radio_status(msg, rover.logger, rover.should_log(MASK_LOG_PM));
             break;
         }
-
-    // send or receive fence points with GCS
-    case MAVLINK_MSG_ID_FENCE_POINT:  // MAV ID: 160
-    case MAVLINK_MSG_ID_FENCE_FETCH_POINT:
-        rover.g2.fence.handle_msg(*this, msg);
-        break;
 
     case MAVLINK_MSG_ID_DISTANCE_SENSOR:
         rover.rangefinder.handle_msg(msg);

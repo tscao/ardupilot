@@ -3023,6 +3023,11 @@ void GCS_MAVLINK::handle_common_message(mavlink_message_t *msg)
         handle_command_int(msg);
         break;
 
+    case MAVLINK_MSG_ID_FENCE_POINT:
+    case MAVLINK_MSG_ID_FENCE_FETCH_POINT:
+        handle_fence_message(msg);
+        break;
+
     case MAVLINK_MSG_ID_GIMBAL_REPORT:
         handle_mount_message(msg);
         break;
@@ -3475,6 +3480,10 @@ MAV_RESULT GCS_MAVLINK::handle_command_long_packet(const mavlink_command_long_t 
 
     case MAV_CMD_DO_SEND_BANNER:
         result = handle_command_do_send_banner(packet);
+        break;
+
+    case MAV_CMD_DO_FENCE_ENABLE:
+        result = handle_command_do_fence_enable(packet);
         break;
 
     case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
